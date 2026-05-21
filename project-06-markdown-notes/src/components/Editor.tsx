@@ -23,6 +23,9 @@ const ACTIONS: Record<string, { prefix: string; suffix: string; placeholder: str
 
 export default function Editor({ content, onChange, toolbarAction, onActionHandled }: EditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  // Ref so applyAction can read current content without recreating on every keystroke
+  const contentRef = useRef(content)
+  contentRef.current = content
 
   const applyAction = useCallback(
     (action: string) => {
@@ -32,12 +35,13 @@ export default function Editor({ content, onChange, toolbarAction, onActionHandl
       const def = ACTIONS[action]
       if (!def) return
 
+      const current = contentRef.current
       const start = ta.selectionStart
       const end = ta.selectionEnd
-      const selected = content.slice(start, end)
+      const selected = current.slice(start, end)
 
-      let before = content.slice(0, start)
-      let after = content.slice(end)
+      let before = current.slice(0, start)
+      let after = current.slice(end)
 
       let insert: string
       let newCursorStart: number
@@ -45,9 +49,9 @@ export default function Editor({ content, onChange, toolbarAction, onActionHandl
 
       if (def.block && start === end) {
         const lineStart = before.lastIndexOf('\n') + 1
-        const lineContent = content.slice(lineStart, end) || def.placeholder
-        before = content.slice(0, lineStart)
-        after = content.slice(end)
+        const lineContent = current.slice(lineStart, end) || def.placeholder
+        before = current.slice(0, lineStart)
+        after = current.slice(end)
         insert = def.prefix + lineContent + def.suffix
         newCursorStart = lineStart + def.prefix.length
         newCursorEnd = newCursorStart + lineContent.length
@@ -61,8 +65,7 @@ export default function Editor({ content, onChange, toolbarAction, onActionHandl
         newCursorEnd = newCursorStart + def.placeholder.length
       }
 
-      const newContent = before + insert + after
-      onChange(newContent)
+      onChange(before + insert + after)
 
       requestAnimationFrame(() => {
         if (!textareaRef.current) return
@@ -70,7 +73,7 @@ export default function Editor({ content, onChange, toolbarAction, onActionHandl
         textareaRef.current.setSelectionRange(newCursorStart, newCursorEnd)
       })
     },
-    [content, onChange]
+    [onChange]
   )
 
   useEffect(() => {
@@ -92,8 +95,8 @@ export default function Editor({ content, onChange, toolbarAction, onActionHandl
       const ta = e.currentTarget
       const start = ta.selectionStart
       const end = ta.selectionEnd
-      const newContent = content.slice(0, start) + '  ' + content.slice(end)
-      onChange(newContent)
+      const current = contentRef.current
+      onChange(current.slice(0, start) + '  ' + current.slice(end))
       requestAnimationFrame(() => {
         if (!textareaRef.current) return
         textareaRef.current.setSelectionRange(start + 2, start + 2)

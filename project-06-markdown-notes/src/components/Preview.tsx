@@ -19,8 +19,6 @@ export default function Preview({ content }: PreviewProps) {
     ref.current.innerHTML = html
 
     ref.current.querySelectorAll('pre').forEach((pre) => {
-      if (pre.querySelector('.copy-btn')) return
-
       const wrapper = document.createElement('div')
       wrapper.style.cssText = 'position:relative'
       pre.parentNode?.insertBefore(wrapper, pre)

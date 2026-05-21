@@ -12,12 +12,13 @@ import {
   Minus,
   Download,
 } from 'lucide-react'
+import { ViewMode } from '../types/note'
 
 interface ToolbarProps {
   onAction: (action: string) => void
   onExport: () => void
-  viewMode: 'editor' | 'split' | 'preview'
-  onViewModeChange: (mode: 'editor' | 'split' | 'preview') => void
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
 }
 
 interface ToolbarButton {
@@ -40,10 +41,10 @@ const BUTTONS: ToolbarButton[] = [
   { icon: <Minus className="w-4 h-4" />, title: 'Séparateur', action: 'hr' },
 ]
 
-const VIEW_MODES = [
-  { value: 'editor' as const, label: 'Éditeur' },
-  { value: 'split' as const, label: 'Séparé' },
-  { value: 'preview' as const, label: 'Aperçu' },
+const VIEW_MODES: { value: ViewMode; label: string }[] = [
+  { value: 'editor', label: 'Éditeur' },
+  { value: 'split', label: 'Séparé' },
+  { value: 'preview', label: 'Aperçu' },
 ]
 
 export default function Toolbar({ onAction, onExport, viewMode, onViewModeChange }: ToolbarProps) {
@@ -55,7 +56,6 @@ export default function Toolbar({ onAction, onExport, viewMode, onViewModeChange
         borderColor: '#e2e8f0',
       }}
     >
-      {/* Formatting buttons */}
       <div className="flex items-center gap-0.5 flex-wrap">
         {BUTTONS.map((btn) => (
           <button
@@ -71,7 +71,6 @@ export default function Toolbar({ onAction, onExport, viewMode, onViewModeChange
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* View mode toggle */}
         <div
           className="flex rounded-lg overflow-hidden"
           style={{ border: '1px solid #e2e8f0' }}
@@ -91,7 +90,6 @@ export default function Toolbar({ onAction, onExport, viewMode, onViewModeChange
           ))}
         </div>
 
-        {/* Export */}
         <button
           onClick={onExport}
           title="Exporter en .md"

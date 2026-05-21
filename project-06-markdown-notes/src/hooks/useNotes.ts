@@ -183,9 +183,13 @@ function saveToStorage(notes: Note[]) {
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>(() => loadFromStorage())
 
-  const saveNotes = useCallback((updated: Note[]) => {
-    setNotes(updated)
-    saveToStorage(updated)
+  // Accepts functional updater so callers don't need to close over `notes`
+  const saveNotes = useCallback((updater: Note[] | ((prev: Note[]) => Note[])) => {
+    setNotes((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      saveToStorage(next)
+      return next
+    })
   }, [])
 
   const createNote = useCallback(() => {
@@ -197,27 +201,33 @@ export function useNotes() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    const updated = [note, ...notes]
-    saveNotes(updated)
+    saveNotes((prev) => [note, ...prev])
     return note
-  }, [notes, saveNotes])
+  }, [saveNotes])
 
   const updateNote = useCallback(
     (id: string, patch: Partial<Omit<Note, 'id' | 'createdAt'>>) => {
-      const updated = notes.map((n) =>
-        n.id === id ? { ...n, ...patch, updatedAt: new Date().toISOString() } : n
-      )
-      saveNotes(updated)
+      saveNotes((prev) => {
+        const existing = prev.find((n) => n.id === id)
+        if (!existing) return prev
+        // Skip write if no fields actually changed
+        const hasChange = (Object.keys(patch) as (keyof typeof patch)[]).some(
+          (k) => patch[k] !== existing[k as keyof Note]
+        )
+        if (!hasChange) return prev
+        return prev.map((n) =>
+          n.id === id ? { ...n, ...patch, updatedAt: new Date().toISOString() } : n
+        )
+      })
     },
-    [notes, saveNotes]
+    [saveNotes]
   )
 
   const deleteNote = useCallback(
     (id: string) => {
-      const updated = notes.filter((n) => n.id !== id)
-      saveNotes(updated)
+      saveNotes((prev) => prev.filter((n) => n.id !== id))
     },
-    [notes, saveNotes]
+    [saveNotes]
   )
 
   return { notes, createNote, updateNote, deleteNote }

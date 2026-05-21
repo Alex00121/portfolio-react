@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Search, Plus, FileText, Tag, Trash2 } from 'lucide-react'
 import { Note } from '../types/note'
 
@@ -44,7 +44,10 @@ export default function Sidebar({
 }: SidebarProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
-  const allTags = Array.from(new Set(notes.flatMap((n) => n.tags))).sort()
+  const allTags = useMemo(
+    () => Array.from(new Set(notes.flatMap((n) => n.tags))).sort(),
+    [notes]
+  )
 
   return (
     <aside

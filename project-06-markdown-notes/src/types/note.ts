@@ -6,3 +6,5 @@ export interface Note {
   createdAt: string
   updatedAt: string
 }
+
+export type ViewMode = 'editor' | 'split' | 'preview'

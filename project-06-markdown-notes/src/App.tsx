@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { FileText } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import Toolbar from './components/Toolbar'
@@ -7,67 +7,60 @@ import Preview from './components/Preview'
 import TagInput from './components/TagInput'
 import { useNotes } from './hooks/useNotes'
 import { useDebounce } from './hooks/useDebounce'
-
-type ViewMode = 'editor' | 'split' | 'preview'
+import { ViewMode } from './types/note'
 
 export default function App() {
   const { notes, createNote, updateNote, deleteNote } = useNotes()
   const [activeNoteId, setActiveNoteId] = useState<string | null>(
     () => notes[0]?.id ?? null
   )
+  const [editorContent, setEditorContent] = useState(
+    () => notes[0]?.content ?? ''
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('split')
   const [toolbarAction, setToolbarAction] = useState<string | null>(null)
-  const [pendingContent, setPendingContent] = useState('')
-  const [isDirty, setIsDirty] = useState(false)
 
   const activeNote = notes.find((n) => n.id === activeNoteId) ?? null
 
-  useEffect(() => {
-    if (activeNote) {
-      setPendingContent(activeNote.content)
-      setIsDirty(false)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeNoteId])
-
   const debouncedSave = useDebounce((id: string, content: string) => {
     updateNote(id, { content })
-    setIsDirty(false)
   }, 500)
 
-  function handleContentChange(content: string) {
-    setPendingContent(content)
-    setIsDirty(true)
-    if (activeNoteId) {
-      debouncedSave(activeNoteId, content)
-    }
-  }
+  const handleContentChange = useCallback(
+    (content: string) => {
+      setEditorContent(content)
+      if (activeNoteId) debouncedSave(activeNoteId, content)
+    },
+    [activeNoteId, debouncedSave]
+  )
 
   function handleSelectNote(id: string) {
-    if (activeNoteId && isDirty) {
-      updateNote(activeNoteId, { content: pendingContent })
-    }
+    if (activeNoteId) updateNote(activeNoteId, { content: editorContent })
+    const note = notes.find((n) => n.id === id)
+    setEditorContent(note?.content ?? '')
     setActiveNoteId(id)
   }
 
   function handleNewNote() {
+    if (activeNoteId) updateNote(activeNoteId, { content: editorContent })
     const note = createNote()
     setActiveNoteId(note.id)
+    setEditorContent(note.content)
   }
 
   function handleDeleteNote(id: string) {
+    const idx = notes.findIndex((n) => n.id === id)
+    const next = notes[idx + 1] ?? notes[idx - 1] ?? null
     deleteNote(id)
-    if (activeNoteId === id) {
-      const remaining = notes.filter((n) => n.id !== id)
-      setActiveNoteId(remaining[0]?.id ?? null)
-    }
+    setActiveNoteId(next?.id ?? null)
+    setEditorContent(next?.content ?? '')
   }
 
   function handleExport() {
     if (!activeNote) return
-    const blob = new Blob([pendingContent], { type: 'text/markdown;charset=utf-8' })
+    const blob = new Blob([editorContent], { type: 'text/markdown;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -89,8 +82,6 @@ export default function App() {
     }
     return result
   }, [notes, searchQuery, activeTag])
-
-  const displayContent = isDirty ? pendingContent : (activeNote?.content ?? '')
 
   return (
     <div
@@ -143,7 +134,7 @@ export default function App() {
                   }}
                 >
                   <Editor
-                    content={displayContent}
+                    content={editorContent}
                     onChange={handleContentChange}
                     toolbarAction={toolbarAction}
                     onActionHandled={() => setToolbarAction(null)}
@@ -156,12 +147,15 @@ export default function App() {
                   className="flex flex-col overflow-hidden"
                   style={{ flex: viewMode === 'split' ? '0 0 50%' : '1 1 100%' }}
                 >
-                  <Preview content={displayContent} />
+                  <Preview content={editorContent} />
                 </div>
               )}
             </div>
 
-            <TagInput tags={activeNote.tags} onChange={(tags) => updateNote(activeNote.id, { tags })} />
+            <TagInput
+              tags={activeNote.tags}
+              onChange={(tags) => updateNote(activeNote.id, { tags })}
+            />
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4">
