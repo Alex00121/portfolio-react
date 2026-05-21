@@ -1,6 +1,8 @@
 import { ShoppingCart, Zap, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
+const NAV_LINKS = ['Accueil', 'Catalogue', 'Promotions', 'À propos']
+
 interface NavbarProps {
   cartCount: number
   onCartOpen: () => void
@@ -12,7 +14,6 @@ export default function Navbar({ cartCount, onCartOpen }: NavbarProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        {/* Logo */}
         <div className="flex items-center gap-2">
           <Zap className="w-6 h-6 text-accent" fill="#6366f1" />
           <span className="text-xl font-extrabold text-heading tracking-tight">
@@ -20,9 +21,8 @@ export default function Navbar({ cartCount, onCartOpen }: NavbarProps) {
           </span>
         </div>
 
-        {/* Nav links — desktop */}
         <nav className="hidden md:flex items-center gap-8">
-          {['Accueil', 'Catalogue', 'Promotions', 'À propos'].map((link) => (
+          {NAV_LINKS.map((link) => (
             <a
               key={link}
               href="#"
@@ -33,7 +33,6 @@ export default function Navbar({ cartCount, onCartOpen }: NavbarProps) {
           ))}
         </nav>
 
-        {/* Cart + hamburger */}
         <div className="flex items-center gap-3">
           <button
             onClick={onCartOpen}
@@ -57,10 +56,9 @@ export default function Navbar({ cartCount, onCartOpen }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile nav */}
       {menuOpen && (
         <nav className="md:hidden border-t border-gray-100 bg-white px-4 py-4 flex flex-col gap-4">
-          {['Accueil', 'Catalogue', 'Promotions', 'À propos'].map((link) => (
+          {NAV_LINKS.map((link) => (
             <a
               key={link}
               href="#"

@@ -10,12 +10,13 @@ export interface CartItem {
 interface CartDrawerProps {
   isOpen: boolean
   items: CartItem[]
+  cartCount: number
   onClose: () => void
   onQtyChange: (id: number, delta: number) => void
   onRemove: (id: number) => void
 }
 
-export default function CartDrawer({ isOpen, items, onClose, onQtyChange, onRemove }: CartDrawerProps) {
+export default function CartDrawer({ isOpen, items, cartCount, onClose, onQtyChange, onRemove }: CartDrawerProps) {
   const subtotal = items.reduce((sum, { product, qty }) => sum + product.price * qty, 0)
   const shipping = subtotal >= 49 ? 0 : 4.99
   const total = subtotal + shipping
@@ -24,7 +25,6 @@ export default function CartDrawer({ isOpen, items, onClose, onQtyChange, onRemo
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -35,7 +35,6 @@ export default function CartDrawer({ isOpen, items, onClose, onQtyChange, onRemo
             onClick={onClose}
           />
 
-          {/* Drawer */}
           <motion.aside
             key="drawer"
             initial={{ x: 420 }}
@@ -44,14 +43,13 @@ export default function CartDrawer({ isOpen, items, onClose, onQtyChange, onRemo
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-accent" />
                 <h2 className="text-lg font-bold text-heading">Mon panier</h2>
-                {items.length > 0 && (
+                {cartCount > 0 && (
                   <span className="bg-accent text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    {items.reduce((s, i) => s + i.qty, 0)}
+                    {cartCount}
                   </span>
                 )}
               </div>
@@ -64,7 +62,6 @@ export default function CartDrawer({ isOpen, items, onClose, onQtyChange, onRemo
               </button>
             </div>
 
-            {/* Items */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center gap-4 py-20 text-gray-400">
@@ -115,7 +112,6 @@ export default function CartDrawer({ isOpen, items, onClose, onQtyChange, onRemo
               )}
             </div>
 
-            {/* Footer */}
             {items.length > 0 && (
               <div className="px-6 py-5 border-t border-gray-100 space-y-4">
                 <div className="space-y-2 text-sm">

@@ -21,7 +21,6 @@ const item = {
 export default function Hero({ onShopNow }: HeroProps) {
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white pt-16">
-      {/* Background decorations */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-1/4 w-72 h-72 bg-indigo-100 rounded-full blur-3xl opacity-60" />
         <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-40" />
@@ -35,13 +34,11 @@ export default function Hero({ onShopNow }: HeroProps) {
           animate="show"
           className="text-center max-w-4xl mx-auto"
         >
-          {/* Tag */}
           <motion.div variants={item} className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-accent text-sm font-semibold px-4 py-2 rounded-full mb-8">
             <Sparkles className="w-4 h-4" />
             Nouvelle collection printemps 2026
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
             variants={item}
             className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-heading tracking-tight leading-none mb-6"
@@ -52,7 +49,6 @@ export default function Hero({ onShopNow }: HeroProps) {
             </span>
           </motion.h1>
 
-          {/* Subtitle */}
           <motion.p
             variants={item}
             className="text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto"
@@ -61,7 +57,6 @@ export default function Hero({ onShopNow }: HeroProps) {
             Qualité irréprochable, livraison rapide, satisfaction garantie.
           </motion.p>
 
-          {/* CTAs */}
           <motion.div variants={item} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={onShopNow}
@@ -75,7 +70,6 @@ export default function Hero({ onShopNow }: HeroProps) {
             </button>
           </motion.div>
 
-          {/* Social proof */}
           <motion.div variants={item} className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">

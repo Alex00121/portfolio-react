@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, Star, Check } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Product } from '../data/products'
 
 interface ProductCardProps {
@@ -25,16 +25,21 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const [added, setAdded] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+  }, [])
 
   function handleAdd() {
     onAddToCart(product)
     setAdded(true)
-    setTimeout(() => setAdded(false), 1800)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setAdded(false), 1800)
   }
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-      {/* Image area */}
       <div className={`relative h-52 bg-gradient-to-br ${product.gradient} flex items-center justify-center`}>
         {product.badge && (
           <span className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-white/30">
@@ -46,7 +51,6 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4">
         <p className="text-xs font-medium text-accent uppercase tracking-wide mb-1">{product.category}</p>
         <h3 className="font-semibold text-heading text-sm leading-snug mb-2">{product.name}</h3>

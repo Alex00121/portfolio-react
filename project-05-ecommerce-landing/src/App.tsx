@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import CategoryFilter from './components/CategoryFilter'
@@ -41,7 +41,12 @@ export default function App() {
     catalogRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0)
+  const cartCount = useMemo(() => cartItems.reduce((s, i) => s + i.qty, 0), [cartItems])
+
+  const filteredProducts = useMemo(
+    () => activeCategory === 'Tous' ? products : products.filter((p) => p.category === activeCategory),
+    [activeCategory]
+  )
 
   return (
     <div className="min-h-screen bg-white">
@@ -49,14 +54,13 @@ export default function App() {
 
       <Hero onShopNow={scrollToCatalog} />
 
-      {/* Catalog section */}
       <section ref={catalogRef} id="catalogue" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
           <h2 className="text-3xl font-extrabold text-heading tracking-tight mb-2">Nos produits</h2>
           <p className="text-gray-500">
             {activeCategory === 'Tous'
               ? `${products.length} articles disponibles`
-              : `${products.filter((p) => p.category === activeCategory).length} articles dans ${activeCategory}`}
+              : `${filteredProducts.length} articles dans ${activeCategory}`}
           </p>
         </div>
 
@@ -65,13 +69,11 @@ export default function App() {
         </div>
 
         <ProductGrid
-          products={products}
-          activeCategory={activeCategory}
+          products={filteredProducts}
           onAddToCart={handleAddToCart}
         />
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-gray-100 py-12 text-center text-sm text-gray-400">
         <p className="font-semibold text-heading mb-1">ShopWave</p>
         <p>© 2026 ShopWave. Tous droits réservés.</p>
@@ -80,6 +82,7 @@ export default function App() {
       <CartDrawer
         isOpen={cartOpen}
         items={cartItems}
+        cartCount={cartCount}
         onClose={() => setCartOpen(false)}
         onQtyChange={handleQtyChange}
         onRemove={handleRemove}
