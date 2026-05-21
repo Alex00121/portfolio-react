@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { WeatherResponse, CityLocation } from '../types/weather'
 
 interface WeatherState {
@@ -13,8 +13,11 @@ export function useWeather() {
     loading: false,
     error: null,
   })
+  const abortRef = useRef<AbortController | null>(null)
 
   const fetchWeather = useCallback(async (location: CityLocation) => {
+    abortRef.current?.abort()
+    abortRef.current = new AbortController()
     setState({ data: null, loading: true, error: null })
     try {
       const url = new URL('https://api.open-meteo.com/v1/forecast')
@@ -26,11 +29,12 @@ export function useWeather() {
       url.searchParams.set('timezone', 'auto')
       url.searchParams.set('forecast_days', '7')
 
-      const res = await fetch(url.toString())
+      const res = await fetch(url.toString(), { signal: abortRef.current.signal })
       if (!res.ok) throw new Error('Failed to fetch weather data')
       const data: WeatherResponse = await res.json()
       setState({ data, loading: false, error: null })
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
       setState({ data: null, loading: false, error: 'Unable to load weather data. Please try again.' })
     }
   }, [])

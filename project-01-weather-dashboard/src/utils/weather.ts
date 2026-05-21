@@ -57,3 +57,9 @@ export function getWindDirection(degrees: number): string {
   const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
   return dirs[Math.round(degrees / 45) % 8]
 }
+
+export function getCurrentHourIndex(times: string[]): number {
+  const now = new Date()
+  const idx = times.findIndex((t) => new Date(t) >= now)
+  return idx === -1 ? 0 : idx
+}

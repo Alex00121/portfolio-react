@@ -42,7 +42,7 @@ export default function App() {
         fetchWeather(loc)
         return
       } catch {
-        // ignore parse error, fall through to geolocation
+        // malformed cache entry — proceed to geolocation
       }
     }
 

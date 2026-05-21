@@ -1,6 +1,7 @@
+import { useMemo } from 'react'
 import { Wind, Droplets, Eye, Zap } from 'lucide-react'
 import type { WeatherResponse, CityLocation } from '../types/weather'
-import { getWeatherEmoji, getWeatherDescription, getWindDirection } from '../utils/weather'
+import { getWeatherEmoji, getWeatherDescription, getWindDirection, getCurrentHourIndex } from '../utils/weather'
 
 interface Props {
   data: WeatherResponse
@@ -10,12 +11,14 @@ interface Props {
 export function CurrentWeather({ data, location }: Props) {
   const { current_weather, hourly } = data
 
-  // Find index closest to current time for humidity and UV
-  const now = new Date()
-  const hourIndex = hourly.time.findIndex((t) => new Date(t) >= now) || 0
-  const humidity = hourly.relativehumidity_2m?.[Math.max(0, hourIndex - 1)] ?? 0
-  const uvIndex = hourly.uv_index?.[Math.max(0, hourIndex - 1)] ?? 0
-  const feelsLike = hourly.apparent_temperature?.[Math.max(0, hourIndex - 1)] ?? current_weather.temperature
+  const currentIdx = useMemo(() => {
+    const hourIndex = getCurrentHourIndex(hourly.time)
+    return Math.max(0, hourIndex - 1)
+  }, [hourly.time])
+
+  const humidity = hourly.relativehumidity_2m?.[currentIdx] ?? 0
+  const uvIndex = hourly.uv_index?.[currentIdx] ?? 0
+  const feelsLike = hourly.apparent_temperature?.[currentIdx] ?? current_weather.temperature
 
   const emoji = getWeatherEmoji(current_weather.weathercode, current_weather.is_day)
   const description = getWeatherDescription(current_weather.weathercode)

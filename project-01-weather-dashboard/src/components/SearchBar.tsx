@@ -9,28 +9,25 @@ interface Props {
 
 export function SearchBar({ onSelect }: Props) {
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState(false)
   const { suggestions, loading, search, clear } = useGeocoding()
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     search(query)
-    setOpen(query.length > 1)
   }, [query, search])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
+        clear()
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [clear])
 
   function handleSelect(result: GeocodingResult) {
     setQuery(`${result.name}, ${result.country}`)
-    setOpen(false)
     clear()
     onSelect({
       name: result.name,
@@ -40,6 +37,8 @@ export function SearchBar({ onSelect }: Props) {
       admin1: result.admin1,
     })
   }
+
+  const showDropdown = query.length > 1 && suggestions.length > 0
 
   return (
     <div ref={containerRef} className="relative w-full max-w-md">
@@ -58,7 +57,7 @@ export function SearchBar({ onSelect }: Props) {
         />
       </div>
 
-      {open && suggestions.length > 0 && (
+      {showDropdown && (
         <ul className="absolute z-50 top-full mt-2 w-full backdrop-blur-md bg-slate-900/90 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
           {suggestions.map((s) => (
             <li key={s.id}>

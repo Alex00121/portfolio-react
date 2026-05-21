@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   AreaChart,
   Area,
@@ -8,7 +9,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { WeatherResponse } from '../types/weather'
-import { formatHour } from '../utils/weather'
+import { formatHour, getCurrentHourIndex } from '../utils/weather'
 
 interface Props {
   data: WeatherResponse
@@ -31,16 +32,13 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 export function HourlyChart({ data }: Props) {
-  const now = new Date()
-  const hourlyData = data.hourly.time
-    .map((t, i) => ({
+  const hourlyData = useMemo(() => {
+    const startIdx = getCurrentHourIndex(data.hourly.time)
+    return data.hourly.time.slice(startIdx, startIdx + 24).map((t, i) => ({
       time: formatHour(t),
-      temp: Math.round(data.hourly.temperature_2m[i]),
-      feelsLike: Math.round(data.hourly.apparent_temperature[i]),
-      rawTime: new Date(t),
+      temp: Math.round(data.hourly.temperature_2m[startIdx + i]),
     }))
-    .filter((d) => d.rawTime >= now)
-    .slice(0, 24)
+  }, [data])
 
   return (
     <div className="backdrop-blur-md bg-white/10 border border-white/10 rounded-2xl p-6 fade-in">
