@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { X, Heart, Clock, Star, Users } from 'lucide-react'
+import { X, Heart, Clock, Users } from 'lucide-react'
 import { Movie, MovieDetail } from '../types/movie'
+import { posterUrl, releaseYear } from '../utils/tmdb'
+import RatingBadge from './RatingBadge'
 
 interface Props {
   movie: Movie
@@ -28,7 +30,7 @@ export default function MovieModal({ movie, isFavorite, onToggleFavorite, onClos
         const data: MovieDetail = await res.json()
         setDetail(data)
       } catch {
-        // use base movie data as fallback
+        // TMDB detail may fail for regional/unlisted titles; base movie data has enough for the modal
       } finally {
         setLoading(false)
       }
@@ -37,17 +39,12 @@ export default function MovieModal({ movie, isFavorite, onToggleFavorite, onClos
   }, [movie.id, apiKey])
 
   const displayed = detail ?? movie
-  const year = displayed.release_date ? displayed.release_date.slice(0, 4) : 'N/A'
-  const posterUrl = displayed.poster_path
-    ? `https://image.tmdb.org/t/p/w500${displayed.poster_path}`
-    : null
+  const year = releaseYear(displayed.release_date)
+  const src = posterUrl(displayed.poster_path)
 
-  const ratingColor =
-    displayed.vote_average >= 7
-      ? 'text-green-400'
-      : displayed.vote_average >= 5
-      ? 'text-yellow-400'
-      : 'text-red-400'
+  const favoriteClass = isFavorite
+    ? 'bg-[#e94560] text-white hover:bg-[#c73652]'
+    : 'border border-[#e94560] text-[#e94560] hover:bg-[#e94560] hover:text-white'
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -72,9 +69,9 @@ export default function MovieModal({ movie, isFavorite, onToggleFavorite, onClos
       >
         <div className="flex flex-col sm:flex-row">
           <div className="sm:w-56 flex-shrink-0">
-            {posterUrl ? (
+            {src ? (
               <img
-                src={posterUrl}
+                src={src}
                 alt={displayed.title}
                 className="w-full h-64 sm:h-full object-cover"
               />
@@ -99,10 +96,7 @@ export default function MovieModal({ movie, isFavorite, onToggleFavorite, onClos
             <div className="flex flex-wrap gap-3 mb-4">
               <span className="text-slate-400 text-sm">{year}</span>
               {displayed.vote_average > 0 && (
-                <span className={`flex items-center gap-1 text-sm font-semibold ${ratingColor}`}>
-                  <Star size={14} className="fill-current" />
-                  {displayed.vote_average.toFixed(1)}
-                </span>
+                <RatingBadge rating={displayed.vote_average} variant="text" />
               )}
               {displayed.vote_count > 0 && (
                 <span className="flex items-center gap-1 text-slate-400 text-sm">
@@ -149,11 +143,7 @@ export default function MovieModal({ movie, isFavorite, onToggleFavorite, onClos
 
             <button
               onClick={() => onToggleFavorite(displayed)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 ${
-                isFavorite
-                  ? 'bg-[#e94560] text-white hover:bg-[#c73652]'
-                  : 'border border-[#e94560] text-[#e94560] hover:bg-[#e94560] hover:text-white'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 ${favoriteClass}`}
             >
               <Heart size={16} className={isFavorite ? 'fill-white' : ''} />
               {isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}

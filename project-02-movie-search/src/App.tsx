@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Film, Heart, AlertCircle } from 'lucide-react'
 import SearchBar from './components/SearchBar'
 import MovieGrid from './components/MovieGrid'
@@ -10,6 +10,7 @@ import { Movie, SearchResult } from './types/movie'
 type Tab = 'search' | 'favorites'
 
 const FAVORITES_KEY = 'cinesearch_favorites'
+const API_KEY = import.meta.env.VITE_TMDB_KEY
 
 function loadFavorites(): Movie[] {
   try {
@@ -31,40 +32,37 @@ export default function App() {
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hasSearched, setHasSearched] = useState(false)
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
   const [favorites, setFavorites] = useState<Movie[]>(loadFavorites)
 
-  const favoriteIds = new Set(favorites.map((f) => f.id))
+  const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites])
 
-  const apiKey = import.meta.env.VITE_TMDB_KEY
+  const handleCloseModal = useCallback(() => setSelectedMovie(null), [])
 
   const fetchMovies = useCallback(
     async (q: string, page: number) => {
-      if (!apiKey) {
+      if (!API_KEY) {
         setError('Clé API TMDB manquante. Créez un fichier .env avec VITE_TMDB_KEY=votre_clé.')
-        setHasSearched(true)
         return
       }
       setLoading(true)
       setError(null)
       try {
         const res = await fetch(
-          `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(q)}&page=${page}&language=fr-FR`
+          `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(q)}&page=${page}&language=fr-FR`
         )
         if (!res.ok) throw new Error(`Erreur API: ${res.status}`)
         const data: SearchResult = await res.json()
         setMovies(data.results)
         setTotalPages(data.total_pages)
-        setHasSearched(true)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur de connexion à l\'API')
+        setError(err instanceof Error ? err.message : "Erreur de connexion à l'API")
         setMovies([])
       } finally {
         setLoading(false)
       }
     },
-    [apiKey]
+    []
   )
 
   const handleSearch = (q: string) => {
@@ -152,41 +150,43 @@ export default function App() {
               </div>
             )}
 
-            {!hasSearched && !loading && (
+            {!query && !loading && (
               <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
                 <span className="text-8xl">🎥</span>
-                <h2 className="text-2xl font-bold text-white">
-                  Votre cinéma commence ici
-                </h2>
+                <h2 className="text-2xl font-bold text-white">Votre cinéma commence ici</h2>
                 <p className="text-slate-400 max-w-sm">
-                  Tapez le titre d'un film dans la barre de recherche pour découvrir des informations, synopsis, notes et bien plus encore.
+                  Tapez le titre d'un film dans la barre de recherche pour découvrir des
+                  informations, synopsis, notes et bien plus encore.
                 </p>
               </div>
             )}
 
-            {hasSearched && !loading && movies.length === 0 && !error && (
+            {query && !loading && movies.length === 0 && !error && (
               <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
                 <span className="text-7xl">🔍</span>
                 <h2 className="text-xl font-bold text-white">Aucun résultat trouvé</h2>
                 <p className="text-slate-400 text-sm max-w-xs">
-                  Essayez avec d'autres mots-clés, vérifiez l'orthographe ou essayez le titre original en anglais.
+                  Essayez avec d'autres mots-clés, vérifiez l'orthographe ou essayez le titre
+                  original en anglais.
                 </p>
               </div>
             )}
 
-            {movies.length > 0 && (
+            {(loading || movies.length > 0) && (
               <>
-                <p className="text-slate-400 text-sm mb-4">
-                  Page {currentPage} sur {Math.min(totalPages, 500)}
-                </p>
+                {!loading && movies.length > 0 && (
+                  <p className="text-slate-400 text-sm mb-4">
+                    Page {currentPage} sur {Math.min(totalPages, 500)}
+                  </p>
+                )}
                 <MovieGrid
                   movies={movies}
                   favorites={favoriteIds}
                   onToggleFavorite={handleToggleFavorite}
                   onMovieClick={setSelectedMovie}
-                  loading={false}
+                  loading={loading}
                 />
-                {totalPages > 1 && (
+                {!loading && totalPages > 1 && (
                   <div className="mt-8">
                     <Pagination
                       currentPage={currentPage}
@@ -196,16 +196,6 @@ export default function App() {
                   </div>
                 )}
               </>
-            )}
-
-            {loading && (
-              <MovieGrid
-                movies={[]}
-                favorites={new Set()}
-                onToggleFavorite={() => {}}
-                onMovieClick={() => {}}
-                loading={true}
-              />
             )}
           </>
         )}
@@ -229,7 +219,7 @@ export default function App() {
           movie={selectedMovie}
           isFavorite={favoriteIds.has(selectedMovie.id)}
           onToggleFavorite={handleToggleFavorite}
-          onClose={() => setSelectedMovie(null)}
+          onClose={handleCloseModal}
         />
       )}
     </div>

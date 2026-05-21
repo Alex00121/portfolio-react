@@ -1,5 +1,7 @@
 import { Heart } from 'lucide-react'
 import { Movie } from '../types/movie'
+import { posterUrl, releaseYear } from '../utils/tmdb'
+import RatingBadge from './RatingBadge'
 
 interface Props {
   movie: Movie
@@ -8,21 +10,9 @@ interface Props {
   onClick: (movie: Movie) => void
 }
 
-function RatingBadge({ rating }: { rating: number }) {
-  const color =
-    rating >= 7 ? 'bg-green-600' : rating >= 5 ? 'bg-yellow-600' : 'bg-red-600'
-  return (
-    <span className={`${color} text-white text-xs font-bold px-2 py-0.5 rounded-md`}>
-      ★ {rating.toFixed(1)}
-    </span>
-  )
-}
-
 export default function MovieCard({ movie, isFavorite, onToggleFavorite, onClick }: Props) {
-  const year = movie.release_date ? movie.release_date.slice(0, 4) : 'N/A'
-  const posterUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : null
+  const year = releaseYear(movie.release_date)
+  const src = posterUrl(movie.poster_path)
 
   return (
     <div
@@ -30,9 +20,9 @@ export default function MovieCard({ movie, isFavorite, onToggleFavorite, onClick
       onClick={() => onClick(movie)}
     >
       <div className="aspect-[2/3] w-full overflow-hidden">
-        {posterUrl ? (
+        {src ? (
           <img
-            src={posterUrl}
+            src={src}
             alt={movie.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"

@@ -6,7 +6,7 @@ interface Props {
   favorites: Set<number>
   onToggleFavorite: (movie: Movie) => void
   onMovieClick: (movie: Movie) => void
-  loading: boolean
+  loading?: boolean
 }
 
 function SkeletonCard() {
@@ -21,7 +21,7 @@ function SkeletonCard() {
   )
 }
 
-export default function MovieGrid({ movies, favorites, onToggleFavorite, onMovieClick, loading }: Props) {
+export default function MovieGrid({ movies, favorites, onToggleFavorite, onMovieClick, loading = false }: Props) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
