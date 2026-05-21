@@ -7,10 +7,10 @@ interface Props {
   onModeChange: (mode: Mode) => void
 }
 
-const modes: { key: Mode; label: string; shortcut: string }[] = [
-  { key: 'pomodoro', label: 'Pomodoro', shortcut: '1' },
-  { key: 'shortBreak', label: 'Pause courte', shortcut: '2' },
-  { key: 'longBreak', label: 'Pause longue', shortcut: '3' },
+const modes: { key: Mode; label: string }[] = [
+  { key: 'pomodoro', label: 'Pomodoro' },
+  { key: 'shortBreak', label: 'Pause courte' },
+  { key: 'longBreak', label: 'Pause longue' },
 ]
 
 const modeColors: Record<Mode, string> = {

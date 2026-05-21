@@ -19,9 +19,18 @@ const MODE_BG: Record<Mode, string> = {
   longBreak: 'rgba(59, 130, 246, 0.07)',
 }
 
+const MODE_LABEL: Record<Mode, string> = {
+  pomodoro: 'Pomodoro',
+  shortBreak: 'Pause courte',
+  longBreak: 'Pause longue',
+}
+
+let audioCtx: AudioContext | null = null
+
 function playBell() {
   try {
-    const ctx = new AudioContext()
+    if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContext()
+    const ctx = audioCtx
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
@@ -49,13 +58,14 @@ export default function App() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const logIdRef = useRef(0)
   const sessionStartRef = useRef<number>(settings.pomodoro * 60)
+  const pendingCompleteRef = useRef<Mode | null>(null)
 
-  const totalTime = settings[mode === 'pomodoro' ? 'pomodoro' : mode === 'shortBreak' ? 'shortBreak' : 'longBreak'] * 60
+  const totalTime = settings[mode] * 60
 
   function switchMode(newMode: Mode, newSettings = settings) {
     setMode(newMode)
     setIsRunning(false)
-    const duration = newSettings[newMode === 'pomodoro' ? 'pomodoro' : newMode === 'shortBreak' ? 'shortBreak' : 'longBreak'] * 60
+    const duration = newSettings[newMode] * 60
     setTimeLeft(duration)
     sessionStartRef.current = duration
   }
@@ -63,20 +73,13 @@ export default function App() {
   function handleSessionComplete(completedMode: Mode) {
     playBell()
 
-    const duration = sessionStartRef.current - timeLeft
     setLog((prev) => [
+      { id: ++logIdRef.current, mode: completedMode, timestamp: new Date(), duration: sessionStartRef.current },
       ...prev,
-      {
-        id: ++logIdRef.current,
-        mode: completedMode,
-        timestamp: new Date(),
-        duration: sessionStartRef.current,
-      },
     ])
 
     if (notificationsEnabled && Notification.permission === 'granted') {
-      const label = completedMode === 'pomodoro' ? 'Pomodoro' : completedMode === 'shortBreak' ? 'Pause courte' : 'Pause longue'
-      new Notification(`${label} terminé !`, {
+      new Notification(`${MODE_LABEL[completedMode]} terminé !`, {
         body: completedMode === 'pomodoro' ? 'Temps de se reposer.' : 'Retour au travail !',
         icon: '/vite.svg',
       })
@@ -100,7 +103,7 @@ export default function App() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           setIsRunning(false)
-          handleSessionComplete(mode)
+          pendingCompleteRef.current = mode
           return 0
         }
         return prev - 1
@@ -108,6 +111,15 @@ export default function App() {
     },
     isRunning ? 1000 : null,
   )
+
+  useEffect(() => {
+    const completedMode = pendingCompleteRef.current
+    if (completedMode !== null) {
+      pendingCompleteRef.current = null
+      handleSessionComplete(completedMode)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft])
 
   const handleStartPause = useCallback(() => {
     if (!isRunning && notificationsEnabled && Notification.permission === 'default') {
@@ -120,7 +132,7 @@ export default function App() {
 
   const handleReset = useCallback(() => {
     setIsRunning(false)
-    const duration = settings[mode === 'pomodoro' ? 'pomodoro' : mode === 'shortBreak' ? 'shortBreak' : 'longBreak'] * 60
+    const duration = settings[mode] * 60
     setTimeLeft(duration)
     sessionStartRef.current = duration
   }, [mode, settings])
@@ -157,10 +169,9 @@ export default function App() {
   }, [handleStartPause, handleReset, handleModeChange])
 
   useEffect(() => {
-    const modeLabel = mode === 'pomodoro' ? 'Pomodoro' : mode === 'shortBreak' ? 'Pause courte' : 'Pause longue'
     const m = Math.floor(timeLeft / 60).toString().padStart(2, '0')
     const s = (timeLeft % 60).toString().padStart(2, '0')
-    document.title = `${m}:${s} — ${modeLabel}`
+    document.title = `${m}:${s} — ${MODE_LABEL[mode]}`
   }, [timeLeft, mode])
 
   return (
@@ -171,7 +182,6 @@ export default function App() {
       }}
     >
       <div className="w-full max-w-md fade-in">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Pomodoro</h1>
@@ -196,12 +206,10 @@ export default function App() {
           </div>
         </div>
 
-        {/* Mode selector */}
         <div className="mb-10">
           <ModeSelector mode={mode} onModeChange={handleModeChange} />
         </div>
 
-        {/* Pomodoro cycle dots */}
         <div className="flex justify-center gap-2 mb-8">
           {Array.from({ length: settings.longBreakInterval }).map((_, i) => {
             const cyclePos = pomodoroCount % settings.longBreakInterval
@@ -217,7 +225,6 @@ export default function App() {
           })}
         </div>
 
-        {/* Timer */}
         <div className="flex justify-center mb-10">
           <Timer
             timeLeft={timeLeft}
@@ -229,7 +236,6 @@ export default function App() {
           />
         </div>
 
-        {/* Skip button */}
         <div className="flex justify-center mb-10">
           <button
             onClick={() => handleSessionComplete(mode)}
@@ -240,7 +246,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Session log */}
         <div
           className="rounded-2xl p-4 border border-white/10"
           style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(8px)' }}
@@ -251,7 +256,6 @@ export default function App() {
           <SessionLog log={log} />
         </div>
 
-        {/* Keyboard shortcuts */}
         <div className="mt-6 flex justify-center gap-4 text-white/20 text-xs font-mono">
           <span>Espace — démarrer/pause</span>
           <span>R — reset</span>

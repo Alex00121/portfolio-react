@@ -29,10 +29,8 @@ export default function Timer({ timeLeft, totalTime, isRunning, mode, onStartPau
 
   return (
     <div className="flex flex-col items-center gap-8">
-      {/* SVG Ring */}
       <div className="relative">
         <svg width="220" height="220" viewBox="0 0 220 220" className="rotate-[-90deg]">
-          {/* Track */}
           <circle
             cx="110"
             cy="110"
@@ -41,7 +39,6 @@ export default function Timer({ timeLeft, totalTime, isRunning, mode, onStartPau
             stroke="rgba(255,255,255,0.1)"
             strokeWidth="10"
           />
-          {/* Progress */}
           <circle
             cx="110"
             cy="110"
@@ -56,7 +53,6 @@ export default function Timer({ timeLeft, totalTime, isRunning, mode, onStartPau
           />
         </svg>
 
-        {/* Time display in center */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
             className="text-6xl font-extrabold tracking-tighter font-mono"
@@ -72,7 +68,6 @@ export default function Timer({ timeLeft, totalTime, isRunning, mode, onStartPau
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center gap-4">
         <button
           onClick={onReset}

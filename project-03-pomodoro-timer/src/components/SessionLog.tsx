@@ -53,7 +53,7 @@ export default function SessionLog({ log }: Props) {
 
   return (
     <div className="max-h-48 overflow-y-auto pr-1 space-y-2 scrollbar-thin">
-      {[...log].reverse().map((entry) => (
+      {log.map((entry) => (
         <div
           key={entry.id}
           className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-2.5 text-sm"
