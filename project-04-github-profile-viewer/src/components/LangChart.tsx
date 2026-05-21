@@ -15,7 +15,6 @@ interface ChartEntry {
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartEntry }> }) {
   if (!active || !payload?.length) return null
   const entry = payload[0].payload
-  const total = payload[0].payload.value
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
       rounded-xl px-3 py-2 shadow-lg text-xs">
@@ -23,7 +22,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
         <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
         <span className="font-semibold text-gray-900 dark:text-white">{entry.name}</span>
       </div>
-      <p className="mt-0.5 text-gray-500 dark:text-gray-400">{total} dépôts</p>
+      <p className="mt-0.5 text-gray-500 dark:text-gray-400">{entry.value} dépôts</p>
     </div>
   )
 }

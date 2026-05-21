@@ -25,6 +25,15 @@ const SORT_LABELS: Record<SortKey, string> = {
   updated: 'Mis à jour',
 }
 
+function SortIcon({ col, sortKey, sortOrder }: { col: SortKey; sortKey: SortKey; sortOrder: SortOrder }) {
+  if (col !== sortKey) return <ChevronUp size={14} className="opacity-30" />
+  return sortOrder === 'desc' ? (
+    <ChevronDown size={14} className="text-indigo-600 dark:text-indigo-400" />
+  ) : (
+    <ChevronUp size={14} className="text-indigo-600 dark:text-indigo-400" />
+  )
+}
+
 export default function RepoList({ repos: allRepos }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('stars')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
@@ -32,6 +41,7 @@ export default function RepoList({ repos: allRepos }: Props) {
 
   const repos = allRepos
     .filter(r => showForks || !r.fork)
+    .slice()
     .sort((a, b) => {
       let valA: number
       let valB: number
@@ -55,15 +65,6 @@ export default function RepoList({ repos: allRepos }: Props) {
       setSortKey(key)
       setSortOrder('desc')
     }
-  }
-
-  function SortIcon({ col }: { col: SortKey }) {
-    if (col !== sortKey) return <ChevronUp size={14} className="opacity-30" />
-    return sortOrder === 'desc' ? (
-      <ChevronDown size={14} className="text-indigo-600 dark:text-indigo-400" />
-    ) : (
-      <ChevronUp size={14} className="text-indigo-600 dark:text-indigo-400" />
-    )
   }
 
   if (repos.length === 0 && !showForks) {
@@ -108,7 +109,7 @@ export default function RepoList({ repos: allRepos }: Props) {
                 }`}
             >
               {SORT_LABELS[key]}
-              <SortIcon col={key} />
+              <SortIcon col={key} sortKey={sortKey} sortOrder={sortOrder} />
             </button>
           ))}
         </div>

@@ -43,34 +43,21 @@ export function useGitHub() {
       ])
 
       const rateLimit = parseRateLimit(userRes.headers)
+      const setError = (error: string) =>
+        setState(s => ({ ...s, loading: false, error, rateLimit }))
 
       if (userRes.status === 404) {
-        setState(s => ({
-          ...s,
-          loading: false,
-          error: 'Utilisateur introuvable — essayez un autre nom',
-          rateLimit,
-        }))
+        setError('Utilisateur introuvable — essayez un autre nom')
         return
       }
 
       if (userRes.status === 403 || userRes.status === 429) {
-        setState(s => ({
-          ...s,
-          loading: false,
-          error: 'Limite de requêtes GitHub atteinte. Réessayez dans quelques minutes.',
-          rateLimit,
-        }))
+        setError('Limite de requêtes GitHub atteinte. Réessayez dans quelques minutes.')
         return
       }
 
       if (!userRes.ok) {
-        setState(s => ({
-          ...s,
-          loading: false,
-          error: `Erreur ${userRes.status} — veuillez réessayer`,
-          rateLimit,
-        }))
+        setError(`Erreur ${userRes.status} — veuillez réessayer`)
         return
       }
 
@@ -79,13 +66,7 @@ export function useGitHub() {
         reposRes.ok ? (reposRes.json() as Promise<GitHubRepo[]>) : Promise.resolve([]),
       ])
 
-      setState({
-        user,
-        repos,
-        rateLimit,
-        loading: false,
-        error: null,
-      })
+      setState({ user, repos, rateLimit, loading: false, error: null })
     } catch {
       setState(s => ({
         ...s,
